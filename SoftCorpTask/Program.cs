@@ -1,3 +1,5 @@
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using SoftCorpTask.Contexts;
 using SoftCorpTask.Services;
@@ -6,11 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("Default connection string is not supplied.");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(defaultConnectionString));
 
 builder.Services.AddScoped<IPasswordService, SimplePasswordService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(defaultConnectionString);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -31,5 +35,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks(
+    "/health",
+    new HealthCheckOptions { ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse});
 
 app.Run();
