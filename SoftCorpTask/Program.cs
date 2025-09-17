@@ -1,6 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using SoftCorpTask.Contexts;
+using SoftCorpTask.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(defaultConnectionString));
+
+builder.Services.AddScoped<IPasswordService, SimplePasswordService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
