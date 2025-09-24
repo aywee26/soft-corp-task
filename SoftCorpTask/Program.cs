@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SoftCorpTask.Contexts;
+using SoftCorpTask.ExceptionHandlers;
 using SoftCorpTask.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,11 @@ builder.Services
         };
     });
 
+builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<InvalidPasswordExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddHealthChecks()
     .AddNpgSql(defaultConnectionString);
 
@@ -50,6 +56,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 
