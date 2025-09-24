@@ -1,6 +1,9 @@
+using System.Text;
 using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SoftCorpTask.Contexts;
 using SoftCorpTask.Services;
 
@@ -13,6 +16,24 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 
 builder.Services.AddScoped<IPasswordService, SimplePasswordService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JsonWebTokenStuff:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JsonWebTokenStuff:Audience"],
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JsonWebTokenStuff:Secret"]!)),
+            ValidateIssuerSigningKey = true
+        };
+    });
+
 builder.Services.AddHealthChecks()
     .AddNpgSql(defaultConnectionString);
 
