@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SoftCorpTask.Contexts;
 using SoftCorpTask.ExceptionHandlers;
+using SoftCorpTask.Exceptions;
 using SoftCorpTask.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,7 @@ builder.Services
 
 builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<InvalidPasswordExceptionHandler>();
+builder.Services.AddExceptionHandler<InvalidRefreshTokenExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 

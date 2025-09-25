@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,7 @@ public class UsersService : IUsersService
     private readonly IPasswordService _passwordService;
     private readonly IConfiguration _configuration;
     private readonly UserMapper _userMapper;
+    private const int ExpireMinutes = 10;
 
     public UsersService(ApplicationDbContext context, IPasswordService passwordService, IConfiguration configuration)
     {
@@ -25,6 +27,13 @@ public class UsersService : IUsersService
         _passwordService = passwordService;
         _configuration = configuration;
         _userMapper = new UserMapper();
+    }
+
+    public async Task<IEnumerable<UserModel>> GetAllUsers()
+    {
+        var userList = await _context.Users.ToListAsync();
+        var mappedList = userList.Select(_userMapper.MapEntityToModel);
+        return mappedList;
     }
 
     public async Task<UserModel> RegisterAsync(RegisterUserModel model)
@@ -61,12 +70,24 @@ public class UsersService : IUsersService
         if (expectedPasswordHash != user.PasswordHash)
             throw new InvalidPasswordException();
 
-        var generatedToken = CreateToken(user);
-        var result = new TokenModel
-        {
-            Token = generatedToken,
-        };
+        var result = await GenerateTokenModelAsync(user);
+        
+        return result;
+    }
 
+    public async Task<TokenModel?> RefreshTokenAsync(RefreshTokenModel model)
+    {
+        var refreshTokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == model.UserId);
+        if (refreshTokenEntity is null)
+            throw new UserNotFoundException();
+
+        if (refreshTokenEntity.Token != model.RefreshToken
+            || refreshTokenEntity.ExpiresAt < DateTimeOffset.UtcNow)
+            throw new InvalidRefreshTokenException();
+
+        var user = await _context.Users.FirstAsync(x => x.Id == refreshTokenEntity.UserId);
+        var result = await GenerateTokenModelAsync(user);
+        
         return result;
     }
 
@@ -88,9 +109,51 @@ public class UsersService : IUsersService
             issuer: _configuration.GetValue<string>("JsonWebTokenStuff:Issuer"),
             audience: _configuration.GetValue<string>("JsonWebTokenStuff:Audience"),
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(10),
+            expires: DateTime.UtcNow.AddMinutes(ExpireMinutes),
             signingCredentials: creds);
         
         return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+    }
+
+    private async Task<string> CreateRefreshTokenAsync(User user)
+    {
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        var refreshToken = Convert.ToBase64String(randomNumber);
+        
+        var refreshTokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
+        if (refreshTokenEntity is not null)
+        {
+            refreshTokenEntity.Token = refreshToken;
+            refreshTokenEntity.ExpiresAt = DateTime.UtcNow.AddMinutes(ExpireMinutes * 2);
+            _context.RefreshTokens.Update(refreshTokenEntity);
+        }
+        else
+        {
+            var newRefreshToken = new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken,
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(ExpireMinutes * 2),
+            };
+            _context.RefreshTokens.Add(newRefreshToken);
+        }
+
+        await _context.SaveChangesAsync();
+        return refreshToken;
+    }
+
+    private async Task<TokenModel> GenerateTokenModelAsync(User user)
+    {
+        var generatedToken = CreateToken(user);
+        var generatedRefreshToken = await CreateRefreshTokenAsync(user);
+        var result = new TokenModel
+        {
+            Token = generatedToken,
+            RefreshToken = generatedRefreshToken,
+        };
+
+        return result;
     }
 }

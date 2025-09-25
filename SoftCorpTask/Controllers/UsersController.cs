@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SoftCorpTask.Models;
 using SoftCorpTask.Services;
@@ -13,6 +14,17 @@ public class UsersController : ControllerBase
     public UsersController(IUsersService usersService)
     {
         _usersService = usersService;
+    }
+
+    [Authorize]
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<UserModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var result = await _usersService.GetAllUsers();
+        
+        return Ok(result);
     }
 
     [HttpPost("register")]
@@ -44,6 +56,16 @@ public class UsersController : ControllerBase
         }
 
         var result = await _usersService.LoginAsync(model);
+        
+        return Ok(result);
+    }
+
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel model)
+    {
+        var result = await _usersService.RefreshTokenAsync(model);
         
         return Ok(result);
     }
