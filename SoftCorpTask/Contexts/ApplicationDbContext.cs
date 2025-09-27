@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
     
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<WorkGroup> WorkGroups => Set<WorkGroup>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,13 @@ public class ApplicationDbContext : DbContext
             e.ToTable("RefreshTokens");
 
             e.HasKey(x => x.UserId);
+        });
+
+        modelBuilder.Entity<WorkGroup>(e =>
+        {
+            e.ToTable("WorkGroups");
+            e.HasKey(x => x.Id);
+            e.HasMany(x => x.Users).WithOne(x => x.WorkGroup).HasForeignKey(x => x.WorkGroupId);
         });
     }
 }

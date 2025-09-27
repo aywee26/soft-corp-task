@@ -10,4 +10,6 @@ public class User
     public string PasswordSalt { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public UserRole UserRole { get; set; }
+    public Guid? WorkGroupId { get; set; }
+    public WorkGroup WorkGroup { get; set; } = null!;
 }
