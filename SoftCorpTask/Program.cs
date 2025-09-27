@@ -19,6 +19,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddScoped<IPasswordService, SimplePasswordService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IWorkGroupService, WorkGroupService>();
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
