@@ -9,7 +9,7 @@ public class CandidateData
     public string Email { get; set; } = null!;
     public string PhoneNumber { get; set; } = null!;
     public string Country { get; set; } = null!;
-    public DateTime BirthDate { get; set; }
+    public DateTimeOffset BirthDate { get; set; }
     public ICollection<SocialNetworkData> SocialNetworks { get; set; } = null!;
     public Guid CandidateId { get; set; }
     public Candidate Candidate { get; set; } = null!;
