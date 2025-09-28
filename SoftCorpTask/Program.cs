@@ -21,6 +21,7 @@ builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IWorkGroupService, WorkGroupService>();
 builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -42,6 +43,7 @@ builder.Services
 builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<InvalidPasswordExceptionHandler>();
 builder.Services.AddExceptionHandler<InvalidRefreshTokenExceptionHandler>();
+builder.Services.AddExceptionHandler<CandidateNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 

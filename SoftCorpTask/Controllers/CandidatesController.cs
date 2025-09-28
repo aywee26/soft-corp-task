@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoftCorpTask.Models.Candidates;
 using SoftCorpTask.Services;
 
 namespace SoftCorpTask.Controllers;
@@ -25,9 +26,17 @@ public class CandidatesController : ControllerBase
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create([FromBody] CreateCandidateModel createCandidateModel)
     {
-        var result = await _candidateService.CreateCandidateAsync();
+        var result = await _candidateService.CreateCandidateAsync(createCandidateModel);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] UpdateCandidateModel updateCandidateModel)
+    {
+        await _candidateService.UpdateCandidateAsync(updateCandidateModel);
+        return NoContent();
     }
 }
