@@ -4,7 +4,7 @@ namespace SoftCorpTask.Services;
 
 public interface ICandidateService
 {
-    Task<IEnumerable<CandidateModel>> GetAllCandidatesAsync(); 
+    Task<CandidateFilteredModels> GetAllCandidatesAsync(CandidateFilterModel filterModel); 
     Task<CandidateModel?> CreateCandidateAsync(CreateCandidateModel createCandidateModel);
     Task UpdateCandidateAsync(UpdateCandidateModel updateCandidateModel);
 }

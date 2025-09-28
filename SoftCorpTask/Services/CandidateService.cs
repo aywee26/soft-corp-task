@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SoftCorpTask.Contexts;
 using SoftCorpTask.Entities;
+using SoftCorpTask.Enums;
 using SoftCorpTask.Exceptions;
 using SoftCorpTask.Mapping;
 using SoftCorpTask.Models.Candidates;
@@ -22,16 +23,50 @@ public class CandidateService : ICandidateService
         _candidateMapper = new CandidateMapper();
     }
 
-    public async Task<IEnumerable<CandidateModel>> GetAllCandidatesAsync()
+    public async Task<CandidateFilteredModels> GetAllCandidatesAsync(CandidateFilterModel filterModel)
     {
         var workGroupId = GetWorkGroupId();
-        var entities = await _context.Candidates
+        var entityQuery = _context.Candidates
             .Include(x => x.CandidateData)
             .ThenInclude(x => x.SocialNetworks)
-            .Where(x => x.WorkGroupId == workGroupId)
+            .Where(x => x.WorkGroupId == workGroupId);
+        
+        if (!string.IsNullOrWhiteSpace(filterModel.FirstName))
+            entityQuery = entityQuery.Where(x => x.CandidateData.FirstName.Contains(filterModel.FirstName));
+        
+        if (!string.IsNullOrWhiteSpace(filterModel.LastName))
+            entityQuery = entityQuery.Where(x => x.CandidateData.LastName.Contains(filterModel.LastName));
+        
+        if (!string.IsNullOrWhiteSpace(filterModel.PatronymicName))
+            entityQuery = entityQuery.Where(x => x.CandidateData.PatronymicName.Contains(filterModel.PatronymicName));
+        
+        if (!string.IsNullOrWhiteSpace(filterModel.Email))
+            entityQuery = entityQuery.Where(x => x.CandidateData.Email.Contains(filterModel.Email));
+
+        if (filterModel.WorkTypes.Length != 0)
+            entityQuery = entityQuery.Where(x => filterModel.WorkTypes.Contains(x.WorkType));
+        
+        var candidatesCount = await entityQuery.CountAsync();
+        
+        if (filterModel.OrderByUpdatedAt is not null)
+            entityQuery = filterModel.OrderByUpdatedAt == OrderByUpdatedAt.Ascending 
+                ? entityQuery.OrderBy(x => x.UpdatedAt)
+                : entityQuery.OrderByDescending(x => x.UpdatedAt);
+
+        var entities = await entityQuery
+            .Skip(filterModel.Skip)
+            .Take(filterModel.Take)
             .ToListAsync();
+            
         var models = entities.Select(_candidateMapper.Map);
-        return models;
+
+        var result = new CandidateFilteredModels
+        {
+            Candidates = models,
+            TotalCount = candidatesCount
+        };
+        
+        return result;
     }
 
     public async Task<CandidateModel?> CreateCandidateAsync(CreateCandidateModel createCandidateModel)
@@ -96,7 +131,7 @@ public class CandidateService : ICandidateService
     {
         var workGroupIdClaim = _httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "WorkGroupId");
         if (workGroupIdClaim is null)
-            throw new Exception();
+            return Guid.Empty;
         var id = Guid.Parse(workGroupIdClaim.Value);
         return id;
     }

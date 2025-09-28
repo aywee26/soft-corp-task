@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoftCorpTask.Enums;
 using SoftCorpTask.Models.Candidates;
 using SoftCorpTask.Services;
 
@@ -18,9 +20,28 @@ public class CandidatesController : ControllerBase
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery, Required] int skip,
+        [FromQuery, Required] int take,
+        [FromQuery] string? firstName,
+        [FromQuery] string? lastName,
+        [FromQuery] string? patronymicName,
+        [FromQuery] string? email,
+        [FromQuery] CandidateWorkType[] workTypes,
+        [FromQuery] OrderByUpdatedAt? orderBy)
     {
-        var result = await _candidateService.GetAllCandidatesAsync();
+        var filterModel = new CandidateFilterModel()
+        {
+            Skip = skip,
+            Take = take,
+            FirstName = firstName,
+            LastName = lastName,
+            PatronymicName = patronymicName,
+            Email = email,
+            WorkTypes = workTypes,
+            OrderByUpdatedAt = orderBy
+        };
+        var result = await _candidateService.GetAllCandidatesAsync(filterModel);
         return Ok(result);
     }
 
