@@ -13,6 +13,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<WorkGroup> WorkGroups => Set<WorkGroup>();
     public DbSet<Candidate> Candidates => Set<Candidate>();
+    public DbSet<CandidateData> CandidateDatas => Set<CandidateData>();
+    public DbSet<Employee> Employees => Set<Employee>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +45,27 @@ public class ApplicationDbContext : DbContext
         {
             e.ToTable("Candidates");
             e.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<CandidateData>(e =>
+        {
+            e.ToTable("CandidateDatas");
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.Candidate).WithOne(x => x.CandidateData).HasForeignKey<CandidateData>(x => x.CandidateId);
+        });
+
+        modelBuilder.Entity<Employee>(e =>
+        {
+            e.ToTable("Employees");
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.CandidateData).WithOne(x => x.Employee).HasForeignKey<Employee>(x => x.CandidateDataId);
+        });
+
+        modelBuilder.Entity<SocialNetworkData>(e =>
+        {
+            e.ToTable("SocialNetworkDatas");
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.CandidateData).WithMany(x => x.SocialNetworks).HasForeignKey(x => x.CandidateDataId);
         });
     }
 }
