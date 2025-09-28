@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoftCorpTask.Enums;
 using SoftCorpTask.Models;
 using SoftCorpTask.Services;
 
@@ -15,6 +17,7 @@ public class WorkGroupController : ControllerBase
         _workGroupService = workGroupService;
     }
 
+    [Authorize]
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<WorkGroupModel>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
@@ -23,6 +26,7 @@ public class WorkGroupController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize]
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(WorkGroupModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -32,6 +36,7 @@ public class WorkGroupController : ControllerBase
         return result is not null ? Ok(result) : NotFound(result);
     }
 
+    [Authorize("Administrator")]
     [HttpPost]
     [ProducesResponseType(typeof(WorkGroupModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

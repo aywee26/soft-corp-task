@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -5,8 +6,8 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SoftCorpTask.Contexts;
+using SoftCorpTask.Enums;
 using SoftCorpTask.ExceptionHandlers;
-using SoftCorpTask.Exceptions;
 using SoftCorpTask.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +40,8 @@ builder.Services
             ValidateIssuerSigningKey = true
         };
     });
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Administrator", policy => policy.RequireClaim(ClaimTypes.Role, UserRole.Administrator.ToString()));
 
 builder.Services.AddExceptionHandler<UserNotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<InvalidPasswordExceptionHandler>();

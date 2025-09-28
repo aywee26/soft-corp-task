@@ -27,6 +27,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize("Administrator")]
     [HttpPost("register")]
     [ProducesResponseType(typeof(UserModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

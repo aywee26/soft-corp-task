@@ -97,7 +97,8 @@ public class UsersService : IUsersService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Login),
-            new Claim("WorkGroupId", (user.WorkGroupId is not null ? user.WorkGroupId.Value.ToString() : string.Empty))
+            new Claim("WorkGroupId", (user.WorkGroupId is not null ? user.WorkGroupId.Value.ToString() : string.Empty)),
+            new Claim(ClaimTypes.Role, user.UserRole.ToString())
         };
         
         var secret = new SymmetricSecurityKey(
