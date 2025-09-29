@@ -48,7 +48,8 @@ public class UsersService : IUsersService
             PasswordSalt = salt,
             PasswordHash = passwordHash,
             FullName = model.FullName,
-            UserRole = UserRole.HumanResources
+            UserRole = UserRole.HumanResources,
+            WorkGroupId = model.WorkGroupId
         };
         
         _context.Users.Add(entityToSave);
